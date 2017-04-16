@@ -1,99 +1,76 @@
 player1 = {}
-player1.canShoot = true
-player1.canShootTimerMax = 0.2
-player1.canShootTimer = player1.canShootTimerMax
-
 player2 = {}
-player2.canShoot = true
-player2.canShootTimerMax = 0.2
-player2.canShootTimer = player2.canShootTimerMax
+bullets = {}
 
-bullets1 = {}
-bullets2 = {}
+-- Sets up each player with default values
+function playerSetUp(player, sprite_path) 
+	player.canShoot = true
+	player.canShootTimerMax = 0.2
+	player.canShootTimer = player.canShootTimerMax
+	player.x = love.graphics.getWidth() / 2
+	player.y = love.graphics.getHeight() / 2
+	player.img = love.graphics.newImage(player.sprite)
+	player.speed = 200
+end
+
+-- Handles player movement
+function player_movement(player, dt, left, right, down, up)
+	if love.keyboard.isDown(left) then
+		if player.x > 0 then
+			player.x = player.x - (player.speed * dt)
+		end
+	elseif love.keyboard.isDown(right) then
+		if player.x < (love.graphics.getWidth() - player.img:getWidth()) then
+			player.x = player.x + (player.speed * dt)
+		end
+	elseif love.keyboard.isDown(down) then
+		if player.y < (love.graphics.getHeight()) then
+			player.y = player.y + (player.speed * dt)
+		end
+	elseif love.keyboard.isDown(up) then
+		if player.y > player.img:getHeight() then
+			player.y = player.y - (player.speed * dt)
+		end
+	end 
+end
+
+-- Handles shooting
+function player_shoot(player, dt, shoot)
+	if love.keyboard.isDown(shoot) and player.canShoot then
+		if player == player1 then
+			acc = -10
+		else
+			acc = 10
+		end
+		newBullet = { x = player.x + (player.img:getWidth()/2), y = player.y, img = bulletImg, accel = acc }
+		table.insert(bullets, newBullet)
+		player.canShoot = false
+		player.canShootTimer = player.canShootTimerMax
+	end
+	
+	player.canShootTimer = player.canShootTimer - (1 * dt)
+	if player.canShootTimer < 0 then
+		player.canShoot = true
+	end
+end
 
 function love.load()
   love.graphics.setBackgroundColor(00, 77, 190, 100)
   
-  player1.x = love.graphics.getWidth() / 2
-  player1.y = love.graphics.getHeight() / 2
-  player1.img = love.graphics.newImage('sprites/shark.jpg')
-  player1.speed = 200
+  player1.sprite = 'sprites/shark.jpg'
+  player2.sprite = 'sprites/dolphin.jpg'
+  playerSetUp(player1)
+  playerSetUp(player2)
   
-  player2.x = love.graphics.getWidth() / 3
-  player2.y = love.graphics.getHeight() * (2/3)
-  player2.img = love.graphics.newImage('sprites/dolphin.jpg')
-  player2.speed = 200
-  
-  bullet1Img = love.graphics.newImage('sprites/bullet1.png')
-  bullet2Img = love.graphics.newImage('sprites/bullet2.png')
+  bulletImg = love.graphics.newImage('sprites/bullet1.png')
 end
   
 function love.update(dt)
 
---player1
-  if love.keyboard.isDown('right') then
-    if player1.x < (love.graphics.getWidth() - player1.img:getWidth()) then
-      player1.x = player1.x + (player1.speed * dt)
-    end
-  elseif love.keyboard.isDown('left') then
-    if player1.x > 0 then  
-      player1.x = player1.x - (player1.speed * dt)
-    end
-  elseif love.keyboard.isDown('down') then
-    if player1.y < (love.graphics.getHeight()) then
-      player1.y = player1.y + (player1.speed * dt)
-    end
-  elseif love.keyboard.isDown('up') then
-    if player1.y > player1.img:getHeight() then
-      player1.y = player1.y - (player1.speed * dt)
-    end
-  end 
-  
-  if love.keyboard.isDown('.') and player1.canShoot then
-    newBullet = { x = player1.x + (player1.img:getWidth()/2), y = player1.y, img = bullet1Img }
-    table.insert(bullets1, newBullet)
-    player1.canShoot = false
-    player1.canShootTimer = player1.canShootTimerMax
-  end
-    
-  player1.canShootTimer = player1.canShootTimer - (1 * dt)
-  if player1.canShootTimer < 0 then
-    player1.canShoot = true
-  end
-  
---player2
-   if love.keyboard.isDown('d') then
-    if player2.x < (love.graphics.getWidth() - player2.img:getWidth()) then
-      player2.x = player2.x + (player2.speed * dt)
-    end
-  elseif love.keyboard.isDown('a') then
-    if player2.x > 0 then  
-      player2.x = player2.x - (player2.speed * dt)
-    end
-  elseif love.keyboard.isDown('s') then
-    if player2.y < (love.graphics.getHeight()) then
-      player2.y = player2.y + (player2.speed * dt)
-    end
-  elseif love.keyboard.isDown('w') then
-    if player2.y > player2.img:getHeight() then
-      player2.y = player2.y - (player2.speed * dt)
-    end
-  end
- 
- if love.keyboard.isDown('c') and player2.canShoot then
-    newBullet = { x = player2.x + (player2.img:getWidth()/2), y = player2.y, img = bullet2Img }
-    table.insert(bullets2, newBullet)
-    player2.canShoot = false
-    player2.canShootTimer = player2.canShootTimerMax
-  end
-  
-  player2.canShootTimer = player2.canShootTimer - (1 * dt)
-  if player2.canShootTimer < 0 then
-    player2.canShoot = true
-  end
-  
-  
-  
+  player_movement(player1, dt, 'left', 'right', 'down', 'up')
+  player_movement(player2, dt, 'a', 'd', 's', 'w')
+  player_shoot(player1, dt, '.')
+  player_shoot(player2, dt, 'c')  
   
 end
 
@@ -101,31 +78,18 @@ function love.draw()
   love.graphics.draw(player1.img, player1.x, player1.y, 0, 1, 1, 0, 32)
   love.graphics.draw(player2.img, player2.x, player2.y, 0, 1, 1, 0, 32)
   
-  for i, bullet in ipairs(bullets1) do
+  for i, bullet in ipairs(bullets) do
     love.graphics.draw(bullet.img, bullet.x, bullet.y)
   end
   
-  for i, bullet in ipairs(bullets2) do
-    love.graphics.draw(bullet.img, bullet.x, bullet.y)
-  end
-  
-  for i, bullet in ipairs(bullets1) do
-    bullet.x = bullet.x - (10)
-    if bullet.x < 0 then
-      table.remove(bullets1, i)
-    end
-  end
-  
-  for i, bullet in ipairs(bullets2) do
-    bullet.x = bullet.x + (10)
-    if bullet.x > love.graphics.getWidth() then
-      table.remove(bullets2, i)
+  for i, bullet in ipairs(bullets) do
+    bullet.x = bullet.x + (bullet.accel)
+    if bullet.x < 0 or bullet.x > love.graphics.getWidth() then
+      table.remove(bullets, i)
     end
   end
   
 end
-
-
 
 
 
